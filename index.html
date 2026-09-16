@@ -1,36 +1,435 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marvel Universe Hub</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>STARK OS - MARK LXXXV INTERFACE</title>
+  <style>
+    :root {
+      --primary: #00f3ff;
+      --secondary: #ff3300;
+      --accent: #ffe600;
+      --bg: #030a16;
+      --panel-bg: rgba(0, 15, 35, 0.65);
+      --glass-border: rgba(0, 243, 255, 0.3);
+      --text: #e0f7fc;
+      --font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-family);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-image: 
+        radial-gradient(circle at center, rgba(0, 243, 255, 0.05) 0%, transparent 70%),
+        linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+    }
+
+    /* HUD Overlay Effects */
+    .scanline {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Header Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      border-bottom: 2px solid var(--glass-border);
+      background: var(--panel-bg);
+      backdrop-filter: blur(10px);
+      z-index: 2;
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+    }
+
+    .system-title {
+      font-size: 1.5rem;
+      letter-spacing: 3px;
+      font-weight: bold;
+      color: var(--primary);
+      text-shadow: 0 0 10px var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      border-radius: 4px;
+      animation: pulse 2s infinite;
+    }
+
+    /* Main Container Grid */
+    main {
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      gap: 20px;
+      padding: 20px;
+      flex-grow: 1;
+      height: calc(100vh - 120px);
+      z-index: 2;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      position: relative;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: -2px; left: 10px; right: 10px; height: 2px;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      color: var(--primary);
+      border-bottom: 1px dashed var(--glass-border);
+      padding-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Center Interface - Arc Reactor Visualizer */
+    .viewport {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .arc-reactor-container {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .arc-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px dashed var(--primary);
+      box-shadow: 0 0 15px var(--primary);
+    }
+
+    .ring-outer {
+      width: 250px; height: 250px;
+      animation: spin 20s linear infinite;
+    }
+
+    .ring-mid {
+      width: 180px; height: 180px;
+      border-style: solid;
+      border-color: var(--secondary) transparent var(--secondary) transparent;
+      animation: spin-reverse 10s linear infinite;
+    }
+
+    .ring-inner {
+      width: 110px; height: 110px;
+      background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+      box-shadow: inset 0 0 20px var(--primary);
+      animation: pulse 1.5s ease-in-out infinite alternate;
+    }
+
+    /* Controls & Buttons */
+    .btn {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 10px 15px;
+      font-family: var(--font-family);
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:hover {
+      background: var(--primary);
+      color: #000;
+      box-shadow: 0 0 15px var(--primary);
+    }
+
+    .btn-alert {
+      border-color: var(--secondary);
+      color: var(--secondary);
+    }
+
+    .btn-alert:hover {
+      background: var(--secondary);
+      color: #fff;
+      box-shadow: 0 0 15px var(--secondary);
+    }
+
+    /* Terminal Widget */
+    .terminal {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--glass-border);
+      padding: 10px;
+      font-size: 0.85rem;
+      height: 150px;
+      overflow-y: auto;
+      color: #00ffaa;
+      line-height: 1.4;
+    }
+
+    /* Metric Bar */
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .metric-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+      width: 70%;
+      transition: width 0.5s ease;
+    }
+
+    /* Keyframes */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes spin-reverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      100% { transform: scale(1.05); opacity: 1; }
+    }
+
+    /* Footer */
+    footer {
+      padding: 10px 30px;
+      border-top: 1px solid var(--glass-border);
+      background: var(--panel-bg);
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      z-index: 2;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Marvel Universe</h1>
-        <nav>
-            <ul>
-                <li><a href="#" onclick="showCategory('all')">All</a></li>
-                <li><a href="#" onclick="showCategory('avengers')">Avengers</a></li>
-                <li><a href="#" onclick="showCategory('villains')">Villains</a></li>
-                <li><a href="#" onclick="showCategory('cosmic')">Cosmic</a></li>
-            </ul>
-        </nav>
-    </header>
+  <div class="scanline"></div>
 
-    <main>
-        <section id="about">
-            <h2>About Marvel</h2>
-            <p>Explore the vast Marvel Universe, from street-level heroes to cosmic entities.</p>
-        </section>
+  <!-- Header -->
+  <header>
+    <div class="system-title">
+      STARK OS <span class="status-badge">MARK LXXXV</span>
+    </div>
+    <div id="clock">00:00:00</div>
+  </header>
 
-        <section id="characters">
-            <h2 id="category-title">All Characters</h2>
-            <div id="character-list"></div>
-        </section>
-    </main>
+  <!-- Main Grid -->
+  <main>
+    <!-- Left Sidebar: Suit Telemetry -->
+    <section class="panel">
+      <h2 class="panel-title">System Metrics</h2>
+      
+      <div class="metric">
+        <div class="metric-label">
+          <span>ARC REACTOR POWER</span>
+          <span id="power-val">98%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="power-bar" style="width: 98%;"></div>
+        </div>
+      </div>
 
-    <script src="script.js"></script>
+      <div class="metric">
+        <div class="metric-label">
+          <span>THRUSTER INTEGRITY</span>
+          <span id="thruster-val">100%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="thruster-bar" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">
+          <span>NANOTECH CAPACITY</span>
+          <span id="nano-val">84%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="nano-bar" style="width: 84%; background: var(--accent);"></div>
+        </div>
+      </div>
+
+      <button class="btn" onclick="runDiagnostics()">Run Diagnostics</button>
+      <button class="btn btn-alert" onclick="toggleOverdrive()">Toggle Overdrive</button>
+    </section>
+
+    <!-- Center Screen: Core Interactive View -->
+    <section class="viewport panel">
+      <div class="arc-reactor-container" onclick="pulseArcCore()">
+        <div class="arc-ring ring-outer"></div>
+        <div class="arc-ring ring-mid"></div>
+        <div class="arc-ring ring-inner" id="core"></div>
+      </div>
+      <p style="text-align:center; font-size: 0.8rem; letter-spacing: 2px; margin-top: 20px; color: var(--primary);">
+        [ CLICK REACTOR CORE TO ENGAGE POWER PULSE ]
+      </p>
+    </section>
+
+    <!-- Right Sidebar: AI Logs & Controls -->
+    <section class="panel">
+      <h2 class="panel-title">F.R.I.D.A.Y Protocol</h2>
+      
+      <div class="terminal" id="terminal">
+        > STARK OS Initialized...<br/>
+        > Connecting to Satellite Link...<br/>
+        > Systems nominal. Voice interface active.<br/>
+      </div>
+
+      <button class="btn" onclick="triggerProtocol('House Party')">Protocol: House Party</button>
+      <button class="btn" onclick="triggerProtocol('Clean Slate')">Protocol: Clean Slate</button>
+      <button class="btn btn-alert" onclick="triggerProtocol('Barnell')">Eject Armor</button>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div>SECURE CONNECTION // PROTOCOL 042</div>
+    <div>STARK INDUSTRIES © 2026</div>
+  </footer>
+
+  <script>
+    // Real-time Clock Widget
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').innerText = now.toTimeString().split(' ')[0] + ' UTC';
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Sound FX Generation using Web Audio API
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq = 600, duration = 0.1) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Terminal Logger
+    function logToTerminal(message) {
+      const terminal = document.getElementById('terminal');
+      terminal.innerHTML += `> ${message}<br/>`;
+      terminal.scrollTop = terminal.scrollHeight;
+      playBeep(800, 0.05);
+    }
+
+    // Interactive Functions
+    function pulseArcCore() {
+      const core = document.getElementById('core');
+      core.style.boxShadow = "0 0 50px var(--primary), inset 0 0 30px #ffffff";
+      logToTerminal("Arc Reactor energy pulse emitted.");
+      playBeep(400, 0.3);
+      setTimeout(() => {
+        core.style.boxShadow = "";
+      }, 500);
+    }
+
+    function runDiagnostics() {
+      logToTerminal("Initiating deep diagnostics check...");
+      setTimeout(() => logToTerminal("Repulsors: OPTIMAL"), 600);
+      setTimeout(() => logToTerminal("HUD Systems: OPTIMAL"), 1200);
+      setTimeout(() => logToTerminal("Targeting Sensors: ONLINE"), 1800);
+    }
+
+    let isOverdrive = false;
+    function toggleOverdrive() {
+      isOverdrive = !isOverdrive;
+      const powerBar = document.getElementById('power-bar');
+      const powerVal = document.getElementById('power-val');
+      
+      if (isOverdrive) {
+        document.documentElement.style.setProperty('--primary', '#ff3300');
+        powerBar.style.width = "100%";
+        powerVal.innerText = "125% [OVERCHARGED]";
+        logToTerminal("WARNING: Overdrive mode engaged!");
+        playBeep(1200, 0.4);
+      } else {
+        document.documentElement.style.setProperty('--primary', '#00f3ff');
+        powerBar.style.width = "98%";
+        powerVal.innerText = "98%";
+        logToTerminal("Systems restored to nominal output.");
+        playBeep(500, 0.2);
+      }
+    }
+
+    function triggerProtocol(protocolName) {
+      logToTerminal(`Executing Protocol: [ ${protocolName.toUpperCase()} ]`);
+    }
+  </script>
 </body>
 </html>
